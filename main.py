@@ -47,6 +47,30 @@ def calc_A_fric_t():
     return A_fric_t
 
 
+def calc_A_kin_t():
+    A_kin_t = sp.lil_matrix((8, dim_x))
+    A_kin_t[:, 0] = [-1, -1, 1, 1, -1, -1, 1, 1]
+    A_kin_t[:, 1] = [-1, 1, -1, 1, -1, 1, -1, 1]
+
+    return A_kin_t
+
+
+def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
+    u_kin_t = np.array(
+        [
+            Lmax - p1tx - p1ty,
+            Lmax - p1tx + p1ty,
+            Lmax + p1tx - p1ty,
+            Lmax + p1tx + p1ty,
+            Lmax - p2tx - p2ty,
+            Lmax - p2tx + p2ty,
+            Lmax + p2tx - p2ty,
+            Lmax + p2tx + p2ty,
+        ]
+    )
+    return u_kin_t
+
+
 if __name__ == "__main__":
     A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
     l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
@@ -56,7 +80,11 @@ if __name__ == "__main__":
     l_fric_t = np.zeros(6)
     u_fric_t = np.full(6, np.inf)
 
-    print(A_fric_t.toarray())
+    A_kin_t = calc_A_kin_t()
+    l_kin_t = np.full(8, np.inf)
+    u_kin_t = calc_u_kin_t(1, 2, 3, 4)
+
+    print(A_kin_t.toarray())
 
     import ipdb
 
