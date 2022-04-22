@@ -10,10 +10,13 @@ I = 0.02
 Lmax = 0.38
 
 dim_x = 10
+dim_dyn = 6
+dim_fric = 6
+dim_kin = 8
 
 
 def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
-    A_dyn_t = sp.lil_matrix((6, dim_x * 2))
+    A_dyn_t = sp.lil_matrix((dim_dyn, dim_x * 2))
     A_dyn_t[:, :6] = sp.identity(6)
     A_dyn_t[:, 10:16] = -sp.identity(6)
     A_dyn_t[0, 12] = dt / m
@@ -32,7 +35,7 @@ def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
 
 
 def calc_A_fric_t():
-    A_fric_t = sp.lil_matrix((6, dim_x))
+    A_fric_t = sp.lil_matrix((dim_fric, dim_x))
     A_fric_t[0, 6] = -1
     A_fric_t[0, 7] = 1
     A_fric_t[1, 6] = 1
@@ -48,7 +51,7 @@ def calc_A_fric_t():
 
 
 def calc_A_kin_t():
-    A_kin_t = sp.lil_matrix((8, dim_x))
+    A_kin_t = sp.lil_matrix((dim_kin, dim_x))
     A_kin_t[:, 0] = [-1, -1, 1, 1, -1, -1, 1, 1]
     A_kin_t[:, 1] = [-1, 1, -1, 1, -1, 1, -1, 1]
 
@@ -77,11 +80,11 @@ if __name__ == "__main__":
     u_dyn_t = l_dyn_t
 
     A_fric_t = calc_A_fric_t()
-    l_fric_t = np.zeros(6)
-    u_fric_t = np.full(6, np.inf)
+    l_fric_t = np.zeros(dim_fric)
+    u_fric_t = np.full(dim_fric, np.inf)
 
     A_kin_t = calc_A_kin_t()
-    l_kin_t = np.full(8, np.inf)
+    l_kin_t = np.full(dim_kin, np.inf)
     u_kin_t = calc_u_kin_t(1, 2, 3, 4)
 
     print(A_kin_t.toarray())
