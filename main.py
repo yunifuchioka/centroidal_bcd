@@ -75,10 +75,6 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
 
 
 if __name__ == "__main__":
-    A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
-    l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
-    u_dyn_t = l_dyn_t
-
     A_fric_t = calc_A_fric_t()
     l_fric_t = np.zeros(dim_fric)
     u_fric_t = np.full(dim_fric, np.inf)
@@ -87,7 +83,26 @@ if __name__ == "__main__":
     l_kin_t = np.full(dim_kin, np.inf)
     u_kin_t = calc_u_kin_t(1, 2, 3, 4)
 
-    print(A_kin_t.toarray())
+    A = sp.lil_matrix((20 * N + 14, dim_x * (N + 1)))
+    l = np.empty(20 * N + 14)
+    u = np.empty(20 * N + 14)
+
+    # dynamics constraints
+    for idx in np.arange(N):
+        A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)  # todo: better values for l
+        l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
+        u_dyn_t = l_dyn_t
+
+        row_indices = (idx * dim_dyn, (idx + 1) * dim_dyn)
+        col_indices = (idx * dim_x, idx * dim_x + dim_x * 2)
+
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_dyn_t
+        l[row_indices[0] : row_indices[1]] = l_dyn_t
+        u[row_indices[0] : row_indices[1]] = u_dyn_t
+
+    # # friction and kinematic constraints
+    # for t in np.arange(N):
+    #     print(t)
 
     import ipdb
 
