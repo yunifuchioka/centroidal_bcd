@@ -1,23 +1,43 @@
 import numpy as np
-from scipy.sparse import csc_matrix
+import scipy.sparse as sp
 import osqp
 
-P = csc_matrix((2, 2))
-P[0, 0] = 1
-P[1, 1] = 1
-q = np.array([1, 1])
+N = 5
+dt = 0.01
+m = 1.5
+g = 9.81
+I = 0.02
+Lmax = 0.38
 
-A = csc_matrix((2, 2))
-A[0, 0] = 1
-A[1, 1] = 1
-l = np.array([-1, -1])
-u = np.array([1, 1])
+dim_x = 10
 
-# print(P.toarray())
 
-m = osqp.OSQP()
+def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
+    A_dyn_t = sp.lil_matrix((6, dim_x * 2))
+    A_dyn_t[:, :6] = sp.identity(6)
+    A_dyn_t[:, 10:16] = -sp.identity(6)
+    A_dyn_t[0, 12] = dt / m
+    A_dyn_t[1, 13] = dt / m
+    A_dyn_t[2, 16] = dt
+    A_dyn_t[2, 18] = dt
+    A_dyn_t[3, 17] = dt
+    A_dyn_t[3, 19] = dt
+    A_dyn_t[4, 15] = dt / I
+    A_dyn_t[5, 16] = -dt * l1ty
+    A_dyn_t[5, 17] = dt * l1tx
+    A_dyn_t[5, 18] = -dt * l2ty
+    A_dyn_t[5, 19] = dt * l2tx
 
-settings = {}
+    return A_dyn_t
 
-m.setup(P=P, q=q, A=A, l=l, u=u, **settings)
-results = m.solve()
+
+if __name__ == "__main__":
+    A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
+    l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
+    u_dyn_t = l_dyn_t
+
+    print(A_dyn_t.toarray())
+
+    import ipdb
+
+    ipdb.set_trace()
