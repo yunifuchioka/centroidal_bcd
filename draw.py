@@ -2,10 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-plt.style.use("seaborn")
+from constants import *
 
-body_w = 0.38
-body_h = 0.1
+plt.style.use("seaborn")
 
 
 def rot_mat_2d(th):
@@ -14,10 +13,10 @@ def rot_mat_2d(th):
 
 def draw(r, th, p1, p2, f1, f2):
     # plot body
-    body_tr = r + rot_mat_2d(th) @ [body_w / 2, body_h / 2]
-    body_tl = r + rot_mat_2d(th) @ [-body_w / 2, body_h / 2]
-    body_bl = r + rot_mat_2d(th) @ [-body_w / 2, -body_h / 2]
-    body_br = r + rot_mat_2d(th) @ [body_w / 2, -body_h / 2]
+    body_tr = r + rot_mat_2d(th) @ [body_l / 2, body_h / 2]
+    body_tl = r + rot_mat_2d(th) @ [-body_l / 2, body_h / 2]
+    body_bl = r + rot_mat_2d(th) @ [-body_l / 2, -body_h / 2]
+    body_br = r + rot_mat_2d(th) @ [body_l / 2, -body_h / 2]
     body_coords = np.vstack((body_tr, body_tl, body_bl, body_br, body_tr)).T
     plt.plot(body_coords[0, :], body_coords[1, :], "-o", markersize=7)
 
@@ -47,12 +46,12 @@ def init_fig():
 
 
 if __name__ == "__main__":
-    r = np.array([0, 0.2])
+    r = np.array([0, 0.15])
     th = 0.0
-    p1 = np.array([-0.2, 0])
-    p2 = np.array([0.2, 0])
-    f1 = np.array([0, 7.0])
-    f2 = np.array([0, 7.0])
+    p1 = np.array([-0.15, 0])
+    p2 = np.array([0.15, 0])
+    f1 = np.array([0, m * g / 2])
+    f2 = np.array([0, m * g / 2])
 
     anim_fig, ax = init_fig()
 
