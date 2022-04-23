@@ -1,4 +1,4 @@
-N = 300
+N = 5
 dt = 0.01
 m = 1.4
 g = 9.81
@@ -23,4 +23,9 @@ dim_x = 14
 dim_x_fqp = 10
 dim_dyn_fqp = 6
 dim_fric_fqp = 6
+dim_kin_fqp = 8
+
+dim_x_cqp = 8
+dim_dyn_cqp = 3
+dim_loc_cqp = 4
 dim_kin_fqp = 8
