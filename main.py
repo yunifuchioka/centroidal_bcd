@@ -104,6 +104,24 @@ def calc_P():
     return P
 
 
+def calc_q_t(h_des_t, h_prev_t):
+    q_t = np.array(
+        [
+            -phi_r * h_des_t[0] - L_r * h_prev_t[0],
+            -phi_r * h_des_t[1] - L_r * h_prev_t[1],
+            -phi_l * h_des_t[2] - L_l * h_prev_t[2],
+            -phi_l * h_des_t[3] - L_l * h_prev_t[3],
+            -phi_th * h_des_t[4] - L_th * h_prev_t[4],
+            -phi_k * h_des_t[5] - L_k * h_prev_t[5],
+            0,
+            0,
+            0,
+            0,
+        ]
+    )
+    return q_t
+
+
 if __name__ == "__main__":
     A = sp.lil_matrix((20 * N + 14, dim_x * (N + 1)))
     l = np.empty(20 * N + 14)
@@ -151,7 +169,17 @@ if __name__ == "__main__":
         l[row_indices[0] : row_indices[1]] = l_kin_t
         u[row_indices[0] : row_indices[1]] = u_kin_t
 
+    # objective
     P = calc_P()
+    q = np.empty((N + 1) * dim_x)
+    for t in np.arange(N + 1):
+        h_des_t = np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3])
+        h_prev_t = np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3])
+        q_t = calc_q_t(h_des_t, h_prev_t)
+
+        row_indices = (t * dim_x, (t + 1) * dim_x)
+
+        q[row_indices[0] : row_indices[1]] = q_t
 
     import ipdb
 
