@@ -19,7 +19,7 @@ def draw(r, th, p1, p2, f1, f2):
     body_bl = r + rot_mat_2d(th) @ [-body_l / 2, -body_h / 2]
     body_br = r + rot_mat_2d(th) @ [body_l / 2, -body_h / 2]
     body_coords = np.vstack((body_tr, body_tl, body_bl, body_br, body_tr)).T
-    plt.plot(body_coords[0, :], body_coords[1, :], "-o", markersize=7)
+    plt.plot(body_coords[0, :], body_coords[1, :], "-o", color="b", markersize=7)
 
     # plot feet
     plt.plot(p1[0], p1[1], marker="o", color="g", markersize=7)
@@ -46,12 +46,39 @@ def init_fig():
     return anim_fig, ax
 
 
+def animate(X, fname=None, display=True, repeat=False):
+    anim_fig, ax = init_fig()
+
+    def draw_frame(k):
+        r, l, th, k, p1, p2, f1, f2 = extract_state(X, k)
+        while ax.lines:
+            ax.lines.pop()
+        draw(r, th, p1, p2, f1, f2)
+
+    anim = animation.FuncAnimation(
+        anim_fig,
+        draw_frame,
+        frames=N + 1,
+        interval=dt * 1000.0,
+        repeat=repeat,
+        blit=False,
+    )
+
+    # if fname is not None:
+    #     Writer = animation.writers["ffmpeg"]
+    #     writer = Writer(fps=int(1 / dt), metadata=dict(artist="Me"), bitrate=1000)
+    #     anim.save("videos/" + fname + ".mp4", writer=writer)
+
+    if display:
+        plt.show()
+
+
 if __name__ == "__main__":
     X = np.empty((dim_x, N + 1))
     for t in np.arange(N + 1):
-        r = np.array([0, 0.15])
+        r = np.array([0, 0.1 + 0.05 * np.sin(t / 10)])
         l = np.array([0.0, 0.0])
-        th = 0.0
+        th = np.pi / 8 * np.sin(t / 14)
         k = 0.0
         p1 = np.array([-0.15, 0])
         p2 = np.array([0.15, 0])
@@ -67,8 +94,11 @@ if __name__ == "__main__":
         X[10:12, t] = f1
         X[12:14, t] = f2
 
-    anim_fig, ax = init_fig()
+    # anim_fig, ax = init_fig()
 
-    r, l, th, k, p1, p2, f1, f2 = extract_state(X, 0)
-    draw(r, th, p1, p2, f1, f2)
+    # r, l, th, k, p1, p2, f1, f2 = extract_state(X, 0)
+    # draw(r, th, p1, p2, f1, f2)
+
+    animate(X)
+
     plt.show()
