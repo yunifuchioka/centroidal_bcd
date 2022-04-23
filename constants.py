@@ -28,4 +28,4 @@ dim_kin_fqp = 8
 dim_x_cqp = 8
 dim_dyn_cqp = 3
 dim_loc_cqp = 4
-dim_kin_fqp = 8
+dim_kin_cqp = 8

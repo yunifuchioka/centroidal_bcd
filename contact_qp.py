@@ -39,6 +39,18 @@ def calc_l_loc_t(p1tx_des, p2tx_des):
     return l_loc_t
 
 
+def calc_A_kin_t():
+    A_kin_t = sp.lil_matrix((dim_kin_cqp, dim_x_cqp))
+    A_kin_t[:, 0] = [-1, -1, 1, 1, -1, -1, 1, 1]
+    A_kin_t[:, 1] = [-1, 1, -1, 1, -1, 1, -1, 1]
+    A_kin_t[:, 4] = [1, 1, -1, -1, 0, 0, 0, 0]
+    A_kin_t[:, 5] = [1, -1, 1, -1, 0, 0, 0, 0]
+    A_kin_t[:, 6] = [0, 0, 0, 0, 1, 1, -1, -1]
+    A_kin_t[:, 7] = [0, 0, 0, 0, 1, -1, 1, -1]
+
+    return A_kin_t
+
+
 if __name__ == "__main__":
     A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
     l_dyn_t = calc_l_dyn_t(1, 2)
@@ -47,6 +59,10 @@ if __name__ == "__main__":
     A_loc_t = calc_A_loc_t()
     l_loc_t = calc_l_loc_t(1, 2)
     u_loc_t = l_loc_t
+
+    A_kin_t = calc_A_kin_t()
+    l_kin_t = np.full(dim_kin_fqp, -np.inf)
+    u_kin_t = np.full(dim_kin_fqp, Lmax)
     import ipdb
 
     ipdb.set_trace()
