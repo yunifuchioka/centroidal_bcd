@@ -3,6 +3,7 @@ import scipy.sparse as sp
 import osqp
 
 from constants import *
+from draw import animate
 
 
 def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
@@ -103,13 +104,47 @@ def calc_q_t(h_des_t, h_prev_t):
 
 
 if __name__ == "__main__":
+    # temp: produce reference trajectory here
+    X = np.empty((dim_x, N + 1))
+    p1_cqp = np.empty((2, N + 1))
+    p2_cqp = np.empty((2, N + 1))
+    l1_cqp = np.empty((2, N + 1))
+    l2_cqp = np.empty((2, N + 1))
+    h_cqp = np.empty((6, N + 1))
+    for t in np.arange(N + 1):
+        r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
+        l = np.array([0.0, 0.0])
+        th = np.pi / 8 * np.sin(t / 14)
+        k = 0.0
+        p1 = np.array([-0.15, 0])
+        p2 = np.array([0.15, 0])
+        f1 = np.array([0, m * g / 2])
+        f2 = np.array([0, m * g / 2])
+
+        X[0:2, t] = r
+        X[2:4, t] = l
+        X[4, t] = th
+        X[5, t] = k
+        X[6:8, t] = p1
+        X[8:10, t] = p2
+        X[10:12, t] = f1
+        X[12:14, t] = f2
+
+        p1_cqp[:, t] = p1
+        p2_cqp[:, t] = p2
+        l1_cqp[:, t] = p1 - r
+        l2_cqp[:, t] = p2 - r
+        h_cqp[:, t] = np.hstack((r, l, th, k))
+
     A = sp.lil_matrix((20 * N + 14, dim_x_fqp * (N + 1)))
     l = np.empty(20 * N + 14)
     u = np.empty(20 * N + 14)
 
     # dynamics constraints
     for idx in np.arange(N):
-        A_dyn_t = calc_A_dyn_t(0.1, 0.1, 0.1, 0.1)  # todo: better values for l
+        l1t = l1_cqp[:, idx + 1]
+        l2t = l2_cqp[:, idx + 1]
+        A_dyn_t = calc_A_dyn_t(l1t[0], l1t[1], l2t[0], l2t[1])
         l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
         u_dyn_t = l_dyn_t
 
@@ -126,7 +161,10 @@ if __name__ == "__main__":
         l_fric_t = np.zeros(dim_fric_fqp)
         u_fric_t = np.full(dim_fric_fqp, np.inf)
 
-        row_indices = (N * dim_dyn_fqp + t * dim_fric_fqp, N * dim_dyn_fqp + (t + 1) * dim_fric_fqp)
+        row_indices = (
+            N * dim_dyn_fqp + t * dim_fric_fqp,
+            N * dim_dyn_fqp + (t + 1) * dim_fric_fqp,
+        )
         col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_fric_t
@@ -135,9 +173,12 @@ if __name__ == "__main__":
 
     # kinematic constraints
     for t in np.arange(N + 1):
+        p1t = p1_cqp[:, t]
+        p2t = p2_cqp[:, t]
+
         A_kin_t = calc_A_kin_t()
         l_kin_t = np.full(dim_kin_fqp, -np.inf)
-        u_kin_t = calc_u_kin_t(0.1, 0.1, 0.1, 0.1)  # todo: better values for p
+        u_kin_t = calc_u_kin_t(p1t[0], p1t[1], p2t[0], p2t[1])
 
         row_indices = (
             N * dim_dyn_fqp + (N + 1) * dim_fric_fqp + t * dim_kin_fqp,
@@ -153,16 +194,25 @@ if __name__ == "__main__":
     P = calc_P()
     q = np.empty((N + 1) * dim_x_fqp)
     for t in np.arange(N + 1):
-        h_des_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
-        h_prev_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+        h_des_t = h_cqp[:, t]
+        h_prev_t = h_cqp[:, t]
         q_t = calc_q_t(h_des_t, h_prev_t)
 
         row_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
         q[row_indices[0] : row_indices[1]] = q_t
 
-    m = osqp.OSQP()
+    qp = osqp.OSQP()
     settings = {}
 
-    m.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
-    results = m.solve()
+    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
+    results = qp.solve()
+
+    X_sol_fqp = results.x.reshape((dim_x_fqp, N + 1), order="F")
+    X_sol = np.empty((dim_x, N + 1))
+    X_sol[:6, :] = X_sol_fqp[:6, :]
+    X_sol[6:8, :] = p1_cqp
+    X_sol[8:10, :] = p2_cqp
+    X_sol[10:, :] = X_sol_fqp[6:, :]
+
+    animate(X_sol)
