@@ -103,39 +103,16 @@ def calc_q_t(h_des_t, h_prev_t):
     return q_t
 
 
-if __name__ == "__main__":
-    # temp: produce reference trajectory here
-    X = np.empty((dim_x, N + 1))
-    p1_cqp = np.empty((2, N + 1))
-    p2_cqp = np.empty((2, N + 1))
-    l1_cqp = np.empty((2, N + 1))
-    l2_cqp = np.empty((2, N + 1))
-    h_cqp = np.empty((6, N + 1))
-    for t in np.arange(N + 1):
-        r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
-        l = np.array([0.0, 0.0])
-        th = np.pi / 8 * np.sin(t / 14)
-        k = 0.0
-        p1 = np.array([-0.15, 0])
-        p2 = np.array([0.15, 0])
-        f1 = np.array([0, m * g / 2])
-        f2 = np.array([0, m * g / 2])
+def solve_force_qp(X_cqp):
+    # extract relevant trajectories from input
+    r_cqp = X_cqp[0:2, :]
+    p1_cqp = X_cqp[6:8, :]
+    p2_cqp = X_cqp[8:10, :]
+    l1_cqp = p1_cqp - r_cqp
+    l2_cqp = p2_cqp - r_cqp
+    h_cqp = X_cqp[0:6, :]
 
-        X[0:2, t] = r
-        X[2:4, t] = l
-        X[4, t] = th
-        X[5, t] = k
-        X[6:8, t] = p1
-        X[8:10, t] = p2
-        X[10:12, t] = f1
-        X[12:14, t] = f2
-
-        p1_cqp[:, t] = p1
-        p2_cqp[:, t] = p2
-        l1_cqp[:, t] = p1 - r
-        l2_cqp[:, t] = p2 - r
-        h_cqp[:, t] = np.hstack((r, l, th, k))
-
+    # constraints
     A = sp.lil_matrix((20 * N + 14, dim_x_fqp * (N + 1)))
     l = np.empty(20 * N + 14)
     u = np.empty(20 * N + 14)
@@ -209,10 +186,37 @@ if __name__ == "__main__":
     results = qp.solve()
 
     X_sol_fqp = results.x.reshape((dim_x_fqp, N + 1), order="F")
+
     X_sol = np.empty((dim_x, N + 1))
     X_sol[:6, :] = X_sol_fqp[:6, :]
-    X_sol[6:8, :] = p1_cqp
-    X_sol[8:10, :] = p2_cqp
+    X_sol[6:10, :] = X_cqp[6:10, :]
     X_sol[10:, :] = X_sol_fqp[6:, :]
 
+    return X_sol
+
+
+if __name__ == "__main__":
+    X = np.empty((dim_x, N + 1))
+    for t in np.arange(N + 1):
+        r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
+        l = np.array([0.0, 0.0])
+        th = np.pi / 8 * np.sin(t / 14)
+        k = 0.0
+        p1 = np.array([-0.15, 0])
+        p2 = np.array([0.15, 0])
+        f1 = np.array([0, m * g / 2])
+        f2 = np.array([0, m * g / 2])
+
+        X[0:2, t] = r
+        X[2:4, t] = l
+        X[4, t] = th
+        X[5, t] = k
+        X[6:8, t] = p1
+        X[8:10, t] = p2
+        X[10:12, t] = f1
+        X[12:14, t] = f2
+
+    X_sol = solve_force_qp(X)
+
+    animate(X)
     animate(X_sol)
