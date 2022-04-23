@@ -166,6 +166,22 @@ def solve_contact_qp(X_fqp):
 
         q[row_indices[0] : row_indices[1]] = q_t
 
+    qp = osqp.OSQP()
+    settings = {}
+
+    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
+    results = qp.solve()
+
+    X_sol_cqp = results.x.reshape((dim_x_cqp, N + 1), order="F")
+
+    X_sol = np.empty((dim_x, N + 1))
+    X_sol[:4, :] = X_sol_cqp[:4, :]  # r, l
+    X_sol[4:6, :] = X_fqp[4:6, :]  # theta, k
+    X_sol[6:10, :] = X_sol_cqp[4:8, :]  # p
+    X_sol[10:, :] = X_fqp[10:, :]  # f
+
+    return X_sol
+
 
 if __name__ == "__main__":
     from draw import animate
@@ -193,4 +209,4 @@ if __name__ == "__main__":
     X_sol = solve_contact_qp(X)
 
     animate(X)
-    # animate(X_sol)
+    animate(X_sol)
