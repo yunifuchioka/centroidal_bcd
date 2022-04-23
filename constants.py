@@ -6,7 +6,7 @@ I = 0.02
 Lmax = 0.32
 
 body_l = 0.38
-body_h = 0.1
+body_h = 0.03
 
 phi_r = 100.0
 phi_l = 10.0

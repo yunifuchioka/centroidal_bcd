@@ -34,6 +34,15 @@ def draw(r, th, p1, p2, f1, f2):
     plt.plot(f1_coords[0, :], f1_coords[1, :], color="r")
     plt.plot(f2_coords[0, :], f2_coords[1, :], color="r")
 
+    # plot root coordinate system
+    axis_len = 0.1
+    axis_head_x = r + rot_mat_2d(th) @ [axis_len, 0]
+    axis_coords_x = np.vstack((r, axis_head_x)).T
+    axis_head_y = r + rot_mat_2d(th) @ [0, axis_len]
+    axis_coords_y = np.vstack((r, axis_head_y)).T
+    plt.plot(axis_coords_x[0, :], axis_coords_x[1, :], color="r")
+    plt.plot(axis_coords_y[0, :], axis_coords_y[1, :], color="g")
+
 
 def init_fig():
     anim_fig = plt.figure(figsize=(6, 6))
