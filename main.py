@@ -6,7 +6,7 @@ from constants import *
 
 
 def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
-    A_dyn_t = sp.lil_matrix((dim_dyn, dim_x * 2))
+    A_dyn_t = sp.lil_matrix((dim_dyn_fqp, dim_x_fqp * 2))
     A_dyn_t[:, :6] = sp.identity(6)
     A_dyn_t[:, 10:16] = -sp.identity(6)
     A_dyn_t[0, 12] = dt / m
@@ -25,7 +25,7 @@ def calc_A_dyn_t(l1tx, l1ty, l2tx, l2ty):
 
 
 def calc_A_fric_t():
-    A_fric_t = sp.lil_matrix((dim_fric, dim_x))
+    A_fric_t = sp.lil_matrix((dim_fric_fqp, dim_x_fqp))
     A_fric_t[0, 6] = -1
     A_fric_t[0, 7] = 1
     A_fric_t[1, 6] = 1
@@ -41,7 +41,7 @@ def calc_A_fric_t():
 
 
 def calc_A_kin_t():
-    A_kin_t = sp.lil_matrix((dim_kin, dim_x))
+    A_kin_t = sp.lil_matrix((dim_kin_fqp, dim_x_fqp))
     A_kin_t[:, 0] = [-1, -1, 1, 1, -1, -1, 1, 1]
     A_kin_t[:, 1] = [-1, 1, -1, 1, -1, 1, -1, 1]
 
@@ -65,7 +65,7 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
 
 
 def calc_P():
-    P = sp.lil_matrix(((N + 1) * dim_x, (N + 1) * dim_x))
+    P = sp.lil_matrix(((N + 1) * dim_x_fqp, (N + 1) * dim_x_fqp))
     diag_P = np.array(
         [
             phi_r + L_r,
@@ -103,7 +103,7 @@ def calc_q_t(h_des_t, h_prev_t):
 
 
 if __name__ == "__main__":
-    A = sp.lil_matrix((20 * N + 14, dim_x * (N + 1)))
+    A = sp.lil_matrix((20 * N + 14, dim_x_fqp * (N + 1)))
     l = np.empty(20 * N + 14)
     u = np.empty(20 * N + 14)
 
@@ -113,8 +113,8 @@ if __name__ == "__main__":
         l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
         u_dyn_t = l_dyn_t
 
-        row_indices = (idx * dim_dyn, (idx + 1) * dim_dyn)
-        col_indices = (idx * dim_x, idx * dim_x + dim_x * 2)
+        row_indices = (idx * dim_dyn_fqp, (idx + 1) * dim_dyn_fqp)
+        col_indices = (idx * dim_x_fqp, idx * dim_x_fqp + dim_x_fqp * 2)
 
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_dyn_t
         l[row_indices[0] : row_indices[1]] = l_dyn_t
@@ -123,11 +123,11 @@ if __name__ == "__main__":
     # friction constraints
     for t in np.arange(N + 1):
         A_fric_t = calc_A_fric_t()
-        l_fric_t = np.zeros(dim_fric)
-        u_fric_t = np.full(dim_fric, np.inf)
+        l_fric_t = np.zeros(dim_fric_fqp)
+        u_fric_t = np.full(dim_fric_fqp, np.inf)
 
-        row_indices = (N * dim_dyn + t * dim_fric, N * dim_dyn + (t + 1) * dim_fric)
-        col_indices = (t * dim_x, (t + 1) * dim_x)
+        row_indices = (N * dim_dyn_fqp + t * dim_fric_fqp, N * dim_dyn_fqp + (t + 1) * dim_fric_fqp)
+        col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_fric_t
         l[row_indices[0] : row_indices[1]] = l_fric_t
@@ -136,14 +136,14 @@ if __name__ == "__main__":
     # kinematic constraints
     for t in np.arange(N + 1):
         A_kin_t = calc_A_kin_t()
-        l_kin_t = np.full(dim_kin, -np.inf)
+        l_kin_t = np.full(dim_kin_fqp, -np.inf)
         u_kin_t = calc_u_kin_t(0.1, 0.1, 0.1, 0.1)  # todo: better values for p
 
         row_indices = (
-            N * dim_dyn + (N + 1) * dim_fric + t * dim_kin,
-            N * dim_dyn + (N + 1) * dim_fric + (t + 1) * dim_kin,
+            N * dim_dyn_fqp + (N + 1) * dim_fric_fqp + t * dim_kin_fqp,
+            N * dim_dyn_fqp + (N + 1) * dim_fric_fqp + (t + 1) * dim_kin_fqp,
         )
-        col_indices = (t * dim_x, (t + 1) * dim_x)
+        col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_kin_t
         l[row_indices[0] : row_indices[1]] = l_kin_t
@@ -151,13 +151,13 @@ if __name__ == "__main__":
 
     # objective
     P = calc_P()
-    q = np.empty((N + 1) * dim_x)
+    q = np.empty((N + 1) * dim_x_fqp)
     for t in np.arange(N + 1):
         h_des_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
         h_prev_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
         q_t = calc_q_t(h_des_t, h_prev_t)
 
-        row_indices = (t * dim_x, (t + 1) * dim_x)
+        row_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
         q[row_indices[0] : row_indices[1]] = q_t
 
