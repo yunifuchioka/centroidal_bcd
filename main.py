@@ -9,6 +9,16 @@ g = 9.81
 I = 0.02
 Lmax = 0.38
 
+phi_r = 100.0
+phi_l = 10.0
+phi_th = 100.0
+phi_k = 1.0
+L_r = 100.0
+L_l = 10.0
+L_th = 100.0
+L_k = 1.0
+psi = 0.1
+
 dim_x = 10
 dim_dyn = 6
 dim_fric = 6
@@ -74,6 +84,26 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
     return u_kin_t
 
 
+def calc_P():
+    P = sp.lil_matrix(((N + 1) * dim_x, (N + 1) * dim_x))
+    diag_P = np.array(
+        [
+            phi_r + L_r,
+            phi_r + L_r,
+            phi_l + L_l,
+            phi_l + L_l,
+            phi_th + L_th,
+            phi_k + L_k,
+            psi,
+            psi,
+            psi,
+            psi,
+        ]
+    )
+    P.setdiag(np.tile(diag_P, N + 1))
+    return P
+
+
 if __name__ == "__main__":
     A = sp.lil_matrix((20 * N + 14, dim_x * (N + 1)))
     l = np.empty(20 * N + 14)
@@ -120,6 +150,8 @@ if __name__ == "__main__":
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_kin_t
         l[row_indices[0] : row_indices[1]] = l_kin_t
         u[row_indices[0] : row_indices[1]] = u_kin_t
+
+    P = calc_P()
 
     import ipdb
 
