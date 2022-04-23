@@ -18,6 +18,8 @@ L_th = 100.0
 L_k = 1.0
 psi = 0.1
 
+dim_x = 14
+
 dim_x_fqp = 10
 dim_dyn_fqp = 6
 dim_fric_fqp = 6

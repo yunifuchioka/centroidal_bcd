@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 from constants import *
+from utils import extract_state
 
 plt.style.use("seaborn")
 
@@ -46,14 +47,28 @@ def init_fig():
 
 
 if __name__ == "__main__":
-    r = np.array([0, 0.15])
-    th = 0.0
-    p1 = np.array([-0.15, 0])
-    p2 = np.array([0.15, 0])
-    f1 = np.array([0, m * g / 2])
-    f2 = np.array([0, m * g / 2])
+    X = np.empty((dim_x, N + 1))
+    for t in np.arange(N + 1):
+        r = np.array([0, 0.15])
+        l = np.array([0.0, 0.0])
+        th = 0.0
+        k = 0.0
+        p1 = np.array([-0.15, 0])
+        p2 = np.array([0.15, 0])
+        f1 = np.array([0, m * g / 2])
+        f2 = np.array([0, m * g / 2])
+
+        X[0:2, t] = r
+        X[2:4, t] = l
+        X[4, t] = th
+        X[5, t] = k
+        X[6:8, t] = p1
+        X[8:10, t] = p2
+        X[10:12, t] = f1
+        X[12:14, t] = f2
 
     anim_fig, ax = init_fig()
 
+    r, l, th, k, p1, p2, f1, f2 = extract_state(X, 0)
     draw(r, th, p1, p2, f1, f2)
     plt.show()
