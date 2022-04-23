@@ -51,6 +51,40 @@ def calc_A_kin_t():
     return A_kin_t
 
 
+def calc_P():
+    P = sp.lil_matrix(((N + 1) * dim_x_cqp, (N + 1) * dim_x_cqp))
+    diag_P = np.array(
+        [
+            L_r,
+            L_r,
+            L_l,
+            L_l,
+            L_p,
+            L_p,
+            L_p,
+            L_p,
+        ]
+    )
+    P.setdiag(np.tile(diag_P, N + 1))
+    return P
+
+
+def calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp):
+    q_t = np.array(
+        [
+            -L_r * rt_fcp[0],
+            -L_r * rt_fcp[1],
+            -L_l * lt_fcp[0],
+            -L_l * lt_fcp[1],
+            -L_p * p1t_fcp[0],
+            -L_p * p1t_fcp[1],
+            -L_p * p2t_fcp[0],
+            -L_p * p2t_fcp[1],
+        ]
+    )
+    return q_t
+
+
 if __name__ == "__main__":
     A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
     l_dyn_t = calc_l_dyn_t(1, 2)
@@ -63,6 +97,13 @@ if __name__ == "__main__":
     A_kin_t = calc_A_kin_t()
     l_kin_t = np.full(dim_kin_fqp, -np.inf)
     u_kin_t = np.full(dim_kin_fqp, Lmax)
+
+    P = calc_P()
+    rt_fcp = np.array([1, 2])
+    lt_fcp = np.array([1, 2])
+    p1t_fcp = np.array([1, 2])
+    p2t_fcp = np.array([1, 2])
+    q_t = calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp)
     import ipdb
 
     ipdb.set_trace()
