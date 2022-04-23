@@ -75,10 +75,6 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
 
 
 if __name__ == "__main__":
-    A_kin_t = calc_A_kin_t()
-    l_kin_t = np.full(dim_kin, np.inf)
-    u_kin_t = calc_u_kin_t(1, 2, 3, 4)
-
     A = sp.lil_matrix((20 * N + 14, dim_x * (N + 1)))
     l = np.empty(20 * N + 14)
     u = np.empty(20 * N + 14)
@@ -109,7 +105,22 @@ if __name__ == "__main__":
         l[row_indices[0] : row_indices[1]] = l_fric_t
         u[row_indices[0] : row_indices[1]] = u_fric_t
 
-    # np.savetxt("A.csv", A.toarray(), delimiter=",")
+    # kinematic constraints
+    for t in np.arange(N + 1):
+        A_kin_t = calc_A_kin_t()
+        l_kin_t = np.full(dim_kin, -np.inf)
+        u_kin_t = calc_u_kin_t(1, 2, 3, 4)  # todo: better values for p
+
+        row_indices = (
+            N * dim_dyn + (N + 1) * dim_fric + t * dim_kin,
+            N * dim_dyn + (N + 1) * dim_fric + (t + 1) * dim_kin,
+        )
+        col_indices = (t * dim_x, (t + 1) * dim_x)
+
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_kin_t
+        l[row_indices[0] : row_indices[1]] = l_kin_t
+        u[row_indices[0] : row_indices[1]] = u_kin_t
+
     import ipdb
 
     ipdb.set_trace()
