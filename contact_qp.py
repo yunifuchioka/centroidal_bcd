@@ -85,25 +85,63 @@ def calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp):
     return q_t
 
 
+def solve_contact_qp(X_fqp):
+    # extract relevant trajectories from input
+    r_fqp = X_fqp[0:2, :]
+    l_fqp = X_fqp[2:4, :]
+    k_fqp = X_fqp[5, :]
+    p1_fqp = X_fqp[6:8, :]
+    p2_fqp = X_fqp[8:10, :]
+    f1_fqp = X_fqp[10:12, :]
+    f2_fqp = X_fqp[12:, :]
+
+    # constraints
+    A = sp.lil_matrix((15 * N + 12, dim_x_cqp * (N + 1)))
+    l = np.empty(15 * N + 12)
+    u = np.empty(15 * N + 12)
+
+    # dynamics constraints
+    for idx in np.arange(N):
+        f1t = f1_fqp[:, idx + 1]
+        f2t = f2_fqp[:, idx + 1]
+        A_dyn_t = calc_A_dyn_t(f1t[0], f1t[1], f2t[0], f2t[1])
+        kt = k_fqp[idx + 1]
+        kt_prev = k_fqp[idx]
+        l_dyn_t = calc_l_dyn_t(kt, kt_prev)
+        u_dyn_t = l_dyn_t
+
+        row_indices = (idx * dim_dyn_cqp, (idx + 1) * dim_dyn_cqp)
+        col_indices = (idx * dim_x_cqp, idx * dim_x_cqp + dim_x_cqp * 2)
+
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_dyn_t
+        l[row_indices[0] : row_indices[1]] = l_dyn_t
+        u[row_indices[0] : row_indices[1]] = u_dyn_t
+
+
 if __name__ == "__main__":
-    A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
-    l_dyn_t = calc_l_dyn_t(1, 2)
-    u_dyn_t = l_dyn_t
+    from draw import animate
 
-    A_loc_t = calc_A_loc_t()
-    l_loc_t = calc_l_loc_t(1, 2)
-    u_loc_t = l_loc_t
+    X = np.empty((dim_x, N + 1))
+    for t in np.arange(N + 1):
+        r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
+        l = np.array([0.0, 0.0])
+        th = np.pi / 8 * np.sin(t / 14)
+        k = 0.0
+        p1 = np.array([-0.15, 0])
+        p2 = np.array([0.15, 0])
+        f1 = np.array([0, m * g / 2])
+        f2 = np.array([0, m * g / 2])
 
-    A_kin_t = calc_A_kin_t()
-    l_kin_t = np.full(dim_kin_fqp, -np.inf)
-    u_kin_t = np.full(dim_kin_fqp, Lmax)
+        X[0:2, t] = r
+        X[2:4, t] = l
+        X[4, t] = th
+        X[5, t] = k
+        X[6:8, t] = p1
+        X[8:10, t] = p2
+        X[10:12, t] = f1
+        X[12:14, t] = f2
 
-    P = calc_P()
-    rt_fcp = np.array([1, 2])
-    lt_fcp = np.array([1, 2])
-    p1t_fcp = np.array([1, 2])
-    p2t_fcp = np.array([1, 2])
-    q_t = calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp)
-    import ipdb
+    X_sol = solve_contact_qp(X)
 
-    ipdb.set_trace()
+    animate(X)
+    # animate(X_sol)
