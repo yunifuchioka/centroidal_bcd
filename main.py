@@ -75,10 +75,6 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
 
 
 if __name__ == "__main__":
-    A_fric_t = calc_A_fric_t()
-    l_fric_t = np.zeros(dim_fric)
-    u_fric_t = np.full(dim_fric, np.inf)
-
     A_kin_t = calc_A_kin_t()
     l_kin_t = np.full(dim_kin, np.inf)
     u_kin_t = calc_u_kin_t(1, 2, 3, 4)
@@ -100,10 +96,20 @@ if __name__ == "__main__":
         l[row_indices[0] : row_indices[1]] = l_dyn_t
         u[row_indices[0] : row_indices[1]] = u_dyn_t
 
-    # # friction and kinematic constraints
-    # for t in np.arange(N):
-    #     print(t)
+    # friction constraints
+    for t in np.arange(N + 1):
+        A_fric_t = calc_A_fric_t()
+        l_fric_t = np.zeros(dim_fric)
+        u_fric_t = np.full(dim_fric, np.inf)
 
+        row_indices = (N * dim_dyn + t * dim_fric, N * dim_dyn + (t + 1) * dim_fric)
+        col_indices = (t * dim_x, (t + 1) * dim_x)
+
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_fric_t
+        l[row_indices[0] : row_indices[1]] = l_fric_t
+        u[row_indices[0] : row_indices[1]] = u_fric_t
+
+    # np.savetxt("A.csv", A.toarray(), delimiter=",")
     import ipdb
 
     ipdb.set_trace()
