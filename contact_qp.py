@@ -23,8 +23,15 @@ def calc_A_dyn_t(f1tx, f1ty, f2tx, f2ty):
     return A_dyn_t
 
 
+def calc_l_dyn_t(kt, kt_prev):
+    l_dyn_t = np.array([0, 0, kt - kt_prev])
+    return l_dyn_t
+
+
 if __name__ == "__main__":
     A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
+    l_dyn_t = calc_l_dyn_t(1, 2)
+    u_dyn_t = l_dyn_t
     import ipdb
 
     ipdb.set_trace()
