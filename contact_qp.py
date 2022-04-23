@@ -148,6 +148,24 @@ def solve_contact_qp(X_fqp):
         )
         col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
 
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_kin_t
+        l[row_indices[0] : row_indices[1]] = l_kin_t
+        u[row_indices[0] : row_indices[1]] = u_kin_t
+
+    # objective
+    P = calc_P()
+    q = np.empty((N + 1) * dim_x_cqp)
+    for t in np.arange(N + 1):
+        rt_fcp = r_fqp[:, t]
+        lt_fcp = l_fqp[:, t]
+        p1t_fcp = p1_fqp[:, t]
+        p2t_fcp = p2_fqp[:, t]
+        q_t = calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp)
+
+        row_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
+
+        q[row_indices[0] : row_indices[1]] = q_t
+
 
 if __name__ == "__main__":
     from draw import animate
