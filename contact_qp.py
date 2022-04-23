@@ -28,10 +28,25 @@ def calc_l_dyn_t(kt, kt_prev):
     return l_dyn_t
 
 
+def calc_A_loc_t():
+    A_loc_t = sp.lil_matrix((dim_loc_cqp, dim_x_cqp))
+    A_loc_t[:, 4:] = sp.identity(4)
+    return A_loc_t
+
+
+def calc_l_loc_t(p1tx_des, p2tx_des):
+    l_loc_t = np.array([p1tx_des, 0, p2tx_des, 0])
+    return l_loc_t
+
+
 if __name__ == "__main__":
     A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)
     l_dyn_t = calc_l_dyn_t(1, 2)
     u_dyn_t = l_dyn_t
+
+    A_loc_t = calc_A_loc_t()
+    l_loc_t = calc_l_loc_t(1, 2)
+    u_loc_t = l_loc_t
     import ipdb
 
     ipdb.set_trace()
