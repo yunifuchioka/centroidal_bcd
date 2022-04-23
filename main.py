@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     # dynamics constraints
     for idx in np.arange(N):
-        A_dyn_t = calc_A_dyn_t(1, 2, 3, 4)  # todo: better values for l
+        A_dyn_t = calc_A_dyn_t(0.1, 0.1, 0.1, 0.1)  # todo: better values for l
         l_dyn_t = np.array([0, 0, 0, m * g * dt, 0, 0])
         u_dyn_t = l_dyn_t
 
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     for t in np.arange(N + 1):
         A_kin_t = calc_A_kin_t()
         l_kin_t = np.full(dim_kin, -np.inf)
-        u_kin_t = calc_u_kin_t(1, 2, 3, 4)  # todo: better values for p
+        u_kin_t = calc_u_kin_t(0.1, 0.1, 0.1, 0.1)  # todo: better values for p
 
         row_indices = (
             N * dim_dyn + (N + 1) * dim_fric + t * dim_kin,
@@ -173,14 +173,16 @@ if __name__ == "__main__":
     P = calc_P()
     q = np.empty((N + 1) * dim_x)
     for t in np.arange(N + 1):
-        h_des_t = np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3])
-        h_prev_t = np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3])
+        h_des_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+        h_prev_t = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
         q_t = calc_q_t(h_des_t, h_prev_t)
 
         row_indices = (t * dim_x, (t + 1) * dim_x)
 
         q[row_indices[0] : row_indices[1]] = q_t
 
-    import ipdb
+    m = osqp.OSQP()
+    settings = {}
 
-    ipdb.set_trace()
+    m.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
+    results = m.solve()
