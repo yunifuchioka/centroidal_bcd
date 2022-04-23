@@ -117,6 +117,25 @@ def solve_contact_qp(X_fqp):
         l[row_indices[0] : row_indices[1]] = l_dyn_t
         u[row_indices[0] : row_indices[1]] = u_dyn_t
 
+    # foot location constraints
+    for t in np.arange(N + 1):
+        p1tx_des = p1_fqp[0, t]
+        p2tx_des = p2_fqp[0, t]
+
+        A_loc_t = calc_A_loc_t()
+        l_loc_t = calc_l_loc_t(p1tx_des, p2tx_des)
+        u_loc_t = l_loc_t
+
+        row_indices = (
+            N * dim_dyn_cqp + t * dim_loc_cqp,
+            N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
+        )
+        col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
+
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc_t
+        l[row_indices[0] : row_indices[1]] = l_loc_t
+        u[row_indices[0] : row_indices[1]] = u_loc_t
+
 
 if __name__ == "__main__":
     from draw import animate
