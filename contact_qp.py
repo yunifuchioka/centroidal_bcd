@@ -130,11 +130,23 @@ def solve_contact_qp(X_fqp):
             N * dim_dyn_cqp + t * dim_loc_cqp,
             N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
         )
-        col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
+        col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
 
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc_t
         l[row_indices[0] : row_indices[1]] = l_loc_t
         u[row_indices[0] : row_indices[1]] = u_loc_t
+
+    # kinematic constraints
+    for t in np.arange(N + 1):
+        A_kin_t = calc_A_kin_t()
+        l_kin_t = np.full(dim_kin_cqp, -np.inf)
+        u_kin_t = np.full(dim_kin_cqp, Lmax)
+
+        row_indices = (
+            N * dim_dyn_cqp + (N + 1) * dim_loc_cqp + t * dim_kin_cqp,
+            N * dim_dyn_cqp + (N + 1) * dim_loc_cqp + (t + 1) * dim_kin_cqp,
+        )
+        col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
 
 
 if __name__ == "__main__":
