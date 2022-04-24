@@ -8,8 +8,8 @@ Lmax = 0.32
 body_l = 0.38
 body_h = 0.03
 
-maxiter = 10
-eps_f = 1e-6
+maxiter = 5
+eps_f = 1e-10
 
 phi_r = 1000.0
 phi_l = 10.0

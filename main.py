@@ -47,14 +47,21 @@ if __name__ == "__main__":
     obj_arr = np.array(obj_arr)
     time_arr = np.array(time_arr)
 
+    print("\ntotal time used in OSQP: {} seconds".format(np.sum(time_arr)))
+
+    fontsize = 15
+    plt.subplot(2, 1, 1)
+    plt.plot(obj_arr, "-o")
+    plt.ylabel("Force QP Objective", size=fontsize)
+    plt.tick_params(axis="x", labelsize=fontsize)
+    plt.tick_params(axis="y", labelsize=fontsize)
+    plt.subplot(2, 1, 2)
     plt.plot(consensus_arr, "-o")
     plt.yscale("log")
-    plt.xlabel("BCD Iterations", size=20)
-    plt.ylabel("Consensus Parameter", size=20)
-    plt.tick_params(axis="x", labelsize=20)
-    plt.tick_params(axis="y", labelsize=20)
+    plt.xlabel("BCD Iterations", size=fontsize)
+    plt.ylabel("Consensus Parameter", size=fontsize)
+    plt.tick_params(axis="x", labelsize=fontsize)
+    plt.tick_params(axis="y", labelsize=fontsize)
     plt.show()
-
-    print("\ntotal time used in OSQP: {} seconds".format(np.sum(time_arr)))
 
     animate(X)

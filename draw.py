@@ -47,11 +47,14 @@ def draw(r, th, p1, p2, f1, f2):
 def init_fig():
     anim_fig = plt.figure(figsize=(6, 6))
     ax = anim_fig.add_subplot()
+    fontsize = 15
     ax.set_aspect("equal", adjustable="box")
     ax.set_xlim([-0.5, 0.5])
     ax.set_ylim([-0.25, 0.75])
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    plt.xlabel("x", size=fontsize)
+    plt.ylabel("y", size=fontsize)
+    plt.tick_params(axis="x", labelsize=fontsize)
+    plt.tick_params(axis="y", labelsize=fontsize)
     return anim_fig, ax
 
 
