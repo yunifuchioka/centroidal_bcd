@@ -11,14 +11,14 @@ body_h = 0.03
 maxiter = 10
 eps_f = 1e-6
 
-phi_r = 100.0
+phi_r = 1000.0
 phi_l = 10.0
 phi_th = 100.0
 phi_k = 1.0
-L_r = 100.0
-L_l = 10.0
-L_th = 100.0
-L_k = 1.0
+L_r = phi_r / 10.0
+L_l = phi_l
+L_th = phi_th
+L_k = phi_k
 L_p = 10.0
 psi = 0.1
 
