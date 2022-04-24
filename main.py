@@ -18,7 +18,7 @@ def calc_consensus(X, X_prev):
 
 
 if __name__ == "__main__":
-    X, h_des = generate_reference()
+    X, h_des = generate_reference(motion_type="random")
 
     consensus_arr = []
 

@@ -1,10 +1,22 @@
 import numpy as np
+from scipy.interpolate import interp1d
 
 from constants import *
 from draw import animate
 
 
 def generate_reference(motion_type="default"):
+    if motion_type == "random":
+        num_points = 5
+        t_des = np.linspace(0, N * dt, num_points)
+        rx_des = np.random.rand(num_points) * 0.1 - 0.05
+        ry_des = np.random.rand(num_points) * 0.1 + 0.05
+        r_des = np.vstack((rx_des, ry_des))
+        th_des = np.random.rand(num_points) * np.pi / 8.0 - np.pi/16.0
+
+        r_interp_func = interp1d(t_des, r_des, kind="zero")
+        th_interp_func = interp1d(t_des, th_des, kind="zero")
+
     X = np.empty((dim_x, N + 1))
     h_des = np.empty((6, N + 1))
     for t in np.arange(N + 1):
@@ -12,6 +24,15 @@ def generate_reference(motion_type="default"):
             r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
             l = np.array([0.0, 0.0])
             th = np.pi / 8 * np.sin(t / 14)
+            k = 0.0
+            p1 = np.array([-0.15, 0])
+            p2 = np.array([0.15, 0])
+            f1 = np.array([0, m * g / 2])
+            f2 = np.array([0, m * g / 2])
+        if motion_type == "random":
+            r = r_interp_func(t * dt)
+            l = np.array([0.0, 0.0])
+            th = th_interp_func(t * dt)
             k = 0.0
             p1 = np.array([-0.15, 0])
             p2 = np.array([0.15, 0])
@@ -36,6 +57,6 @@ def generate_reference(motion_type="default"):
 
 
 if __name__ == "__main__":
-    X, _ = generate_reference()
+    X, _ = generate_reference(motion_type="random_linear")
 
     animate(X)
