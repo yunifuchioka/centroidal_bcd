@@ -181,7 +181,9 @@ def solve_contact_qp(X_prev):
     X_sol[6:10, :] = X_sol_cqp[4:8, :]  # p
     X_sol[10:, :] = X_prev[10:, :]  # f
 
-    return X_sol
+    info = results.info
+
+    return X_sol, info
 
 
 if __name__ == "__main__":

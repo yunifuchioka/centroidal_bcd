@@ -21,21 +21,31 @@ if __name__ == "__main__":
     X, h_des = generate_reference(motion_type="random")
 
     consensus_arr = []
+    obj_arr = []
+    time_arr = []
 
     X_prev = X
     for iter in range(maxiter):
-        X = solve_force_qp(X, h_des)
-        X = solve_contact_qp(X)
+        X, info_fqp = solve_force_qp(X, h_des)
+        X, info_cqp = solve_contact_qp(X)
+
+        obj_arr.append(info_fqp.obj_val)
+        time_arr.append(info_fqp.run_time)
+        time_arr.append(info_cqp.run_time)
 
         consensus = calc_consensus(X, X_prev)
-        print(consensus)
+        print("iteration {}, consensus = {}".format(iter, consensus))
         consensus_arr.append(consensus)
         if consensus < eps_f:
             break
 
         X_prev = X
-    X = solve_force_qp(X, h_des)
+    X, info = solve_force_qp(X, h_des)
+    time_arr.append(info_fqp.run_time)
+
     consensus_arr = np.array(consensus_arr)
+    obj_arr = np.array(obj_arr)
+    time_arr = np.array(time_arr)
 
     plt.plot(consensus_arr, "-o")
     plt.yscale("log")
@@ -44,5 +54,7 @@ if __name__ == "__main__":
     plt.tick_params(axis="x", labelsize=20)
     plt.tick_params(axis="y", labelsize=20)
     plt.show()
+
+    print("\ntotal time used in OSQP: {} seconds".format(np.sum(time_arr)))
 
     animate(X)

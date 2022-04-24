@@ -193,7 +193,9 @@ def solve_force_qp(X_prev, h_des):
     X_sol[6:10, :] = X_prev[6:10, :]
     X_sol[10:, :] = X_sol_fqp[6:, :]
 
-    return X_sol
+    info = results.info
+
+    return X_sol, info
 
 
 if __name__ == "__main__":
