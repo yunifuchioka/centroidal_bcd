@@ -85,7 +85,7 @@ def calc_P():
     return P
 
 
-def calc_q_t(h_des_t, h_prev_t):
+def calc_q_t(h_prev_t, h_des_t):
     q_t = np.array(
         [
             -phi_r * h_des_t[0] - L_r * h_prev_t[0],
@@ -103,14 +103,14 @@ def calc_q_t(h_des_t, h_prev_t):
     return q_t
 
 
-def solve_force_qp(X_cqp):
-    # extract relevant trajectories from input
-    r_cqp = X_cqp[0:2, :]
-    p1_cqp = X_cqp[6:8, :]
-    p2_cqp = X_cqp[8:10, :]
+def solve_force_qp(X_prev, h_des):
+    # extract relevant trajectories from previous solution
+    r_cqp = X_prev[0:2, :]
+    p1_cqp = X_prev[6:8, :]
+    p2_cqp = X_prev[8:10, :]
     l1_cqp = p1_cqp - r_cqp
     l2_cqp = p2_cqp - r_cqp
-    h_cqp = X_cqp[0:6, :]
+    h_prev = X_prev[0:6, :]
 
     # constraints
     A = sp.lil_matrix((20 * N + 14, dim_x_fqp * (N + 1)))
@@ -171,9 +171,9 @@ def solve_force_qp(X_cqp):
     P = calc_P()
     q = np.empty((N + 1) * dim_x_fqp)
     for t in np.arange(N + 1):
-        h_des_t = h_cqp[:, t]
-        h_prev_t = h_cqp[:, t]
-        q_t = calc_q_t(h_des_t, h_prev_t)
+        h_prev_t = h_prev[:, t]
+        h_des_t = h_des[:, t]
+        q_t = calc_q_t(h_prev_t, h_des_t)
 
         row_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
 
@@ -189,7 +189,7 @@ def solve_force_qp(X_cqp):
 
     X_sol = np.empty((dim_x, N + 1))
     X_sol[:6, :] = X_sol_fqp[:6, :]
-    X_sol[6:10, :] = X_cqp[6:10, :]
+    X_sol[6:10, :] = X_prev[6:10, :]
     X_sol[10:, :] = X_sol_fqp[6:, :]
 
     return X_sol
@@ -197,6 +197,7 @@ def solve_force_qp(X_cqp):
 
 if __name__ == "__main__":
     X = np.empty((dim_x, N + 1))
+    h_des = np.empty((6, N + 1))
     for t in np.arange(N + 1):
         r = np.array([0.1 * np.cos(t / 10), 0.1 + 0.05 * np.sin(t / 10)])
         l = np.array([0.0, 0.0])
@@ -216,7 +217,12 @@ if __name__ == "__main__":
         X[10:12, t] = f1
         X[12:14, t] = f2
 
-    X_sol = solve_force_qp(X)
+        h_des[0:2, t] = r
+        h_des[2:4, t] = l
+        h_des[4, t] = th
+        h_des[5, t] = k
+
+    X_sol = solve_force_qp(X, h_des)
 
     animate(X)
     animate(X_sol)

@@ -34,8 +34,8 @@ def calc_A_loc_t():
     return A_loc_t
 
 
-def calc_l_loc_t(p1tx_des, p2tx_des):
-    l_loc_t = np.array([p1tx_des, 0, p2tx_des, 0])
+def calc_l_loc_t(p1tx_prev, p2tx_prev):
+    l_loc_t = np.array([p1tx_prev, 0, p2tx_prev, 0])
     return l_loc_t
 
 
@@ -85,15 +85,15 @@ def calc_q_t(rt_fcp, lt_fcp, p1t_fcp, p2t_fcp):
     return q_t
 
 
-def solve_contact_qp(X_fqp):
+def solve_contact_qp(X_prev):
     # extract relevant trajectories from input
-    r_fqp = X_fqp[0:2, :]
-    l_fqp = X_fqp[2:4, :]
-    k_fqp = X_fqp[5, :]
-    p1_fqp = X_fqp[6:8, :]
-    p2_fqp = X_fqp[8:10, :]
-    f1_fqp = X_fqp[10:12, :]
-    f2_fqp = X_fqp[12:, :]
+    r_fqp = X_prev[0:2, :]
+    l_fqp = X_prev[2:4, :]
+    k_fqp = X_prev[5, :]
+    p1_fqp = X_prev[6:8, :]
+    p2_fqp = X_prev[8:10, :]
+    f1_fqp = X_prev[10:12, :]
+    f2_fqp = X_prev[12:, :]
 
     # constraints
     A = sp.lil_matrix((15 * N + 12, dim_x_cqp * (N + 1)))
@@ -119,11 +119,11 @@ def solve_contact_qp(X_fqp):
 
     # foot location constraints
     for t in np.arange(N + 1):
-        p1tx_des = p1_fqp[0, t]
-        p2tx_des = p2_fqp[0, t]
+        p1tx_prev = p1_fqp[0, t]
+        p2tx_prev = p2_fqp[0, t]
 
         A_loc_t = calc_A_loc_t()
-        l_loc_t = calc_l_loc_t(p1tx_des, p2tx_des)
+        l_loc_t = calc_l_loc_t(p1tx_prev, p2tx_prev)
         u_loc_t = l_loc_t
 
         row_indices = (
@@ -176,9 +176,9 @@ def solve_contact_qp(X_fqp):
 
     X_sol = np.empty((dim_x, N + 1))
     X_sol[:4, :] = X_sol_cqp[:4, :]  # r, l
-    X_sol[4:6, :] = X_fqp[4:6, :]  # theta, k
+    X_sol[4:6, :] = X_prev[4:6, :]  # theta, k
     X_sol[6:10, :] = X_sol_cqp[4:8, :]  # p
-    X_sol[10:, :] = X_fqp[10:, :]  # f
+    X_sol[10:, :] = X_prev[10:, :]  # f
 
     return X_sol
 
