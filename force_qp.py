@@ -181,6 +181,7 @@ def solve_force_qp(X_prev, h_des):
 
     qp = osqp.OSQP()
     settings = {}
+    settings["verbose"] = False
 
     qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
     results = qp.solve()

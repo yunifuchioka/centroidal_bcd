@@ -168,6 +168,7 @@ def solve_contact_qp(X_prev):
 
     qp = osqp.OSQP()
     settings = {}
+    settings["verbose"] = False
 
     qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
     results = qp.solve()
