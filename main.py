@@ -34,6 +34,7 @@ if __name__ == "__main__":
             break
 
         X_prev = X
+    X = solve_force_qp(X, h_des)
     consensus_arr = np.array(consensus_arr)
 
     plt.plot(consensus_arr, "-o")
