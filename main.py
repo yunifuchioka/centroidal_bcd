@@ -64,4 +64,4 @@ if __name__ == "__main__":
     plt.tick_params(axis="y", labelsize=fontsize)
     plt.show()
 
-    animate(X)
+    animate(X, repeat=True)

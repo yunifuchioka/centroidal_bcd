@@ -61,11 +61,12 @@ def init_fig():
 def animate(X, fname=None, display=True, repeat=False):
     anim_fig, ax = init_fig()
 
-    def draw_frame(k):
-        r, l, th, k, p1, p2, f1, f2 = extract_state(X, k)
+    def draw_frame(frame_idx):
+        r, l, th, k, p1, p2, f1, f2 = extract_state(X, frame_idx)
         while ax.lines:
             ax.lines.pop()
         draw(r, th, p1, p2, f1, f2)
+        plt.title("t={:.3}".format(frame_idx * dt))
 
     anim = animation.FuncAnimation(
         anim_fig,
