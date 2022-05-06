@@ -66,7 +66,7 @@ def animate(X, fname=None, display=True, repeat=False):
         while ax.lines:
             ax.lines.pop()
         draw(r, th, p1, p2, f1, f2)
-        plt.title("t={:.3}".format(frame_idx * dt))
+        plt.title("t={:.3}".format(frame_idx * dt), fontsize=15)
 
     anim = animation.FuncAnimation(
         anim_fig,

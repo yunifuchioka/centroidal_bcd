@@ -7,15 +7,16 @@ from draw import animate
 
 def generate_reference(motion_type="default"):
     if motion_type == "random":
-        num_points = 7
+        num_points = N // 50
         t_des = np.linspace(0, N * dt, num_points)
-        rx_des = np.random.rand(num_points) * 0.1 - 0.05
-        ry_des = np.random.rand(num_points) * 0.1 + 0.05
+        rx_des = np.random.rand(num_points) * 0.14 - 0.07
+        ry_des = np.random.rand(num_points) * 0.14 + 0.07
         r_des = np.vstack((rx_des, ry_des))
-        th_des = np.random.rand(num_points) * np.pi / 8.0 - np.pi/16.0
+        th_des = np.random.rand(num_points) * np.pi / 4.0 - np.pi / 8.0
 
-        r_interp_func = interp1d(t_des, r_des, kind="linear")
-        th_interp_func = interp1d(t_des, th_des, kind="linear")
+        interp_kind = "linear"
+        r_interp_func = interp1d(t_des, r_des, kind=interp_kind)
+        th_interp_func = interp1d(t_des, th_des, kind=interp_kind)
 
     X = np.empty((dim_x, N + 1))
     h_des = np.empty((6, N + 1))

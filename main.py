@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 from constants import *
 from draw import animate
@@ -18,6 +19,7 @@ def calc_consensus(X, X_prev):
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     X, h_des = generate_reference(motion_type="random")
 
     consensus_arr = []
@@ -34,7 +36,7 @@ if __name__ == "__main__":
         time_arr.append(info_cqp.run_time)
 
         consensus = calc_consensus(X, X_prev)
-        print("iteration {}, consensus = {}".format(iter, consensus))
+        print("iteration {}, consensus = {:.3}".format(iter, consensus))
         consensus_arr.append(consensus)
         if consensus < eps_f:
             break
@@ -47,7 +49,8 @@ if __name__ == "__main__":
     obj_arr = np.array(obj_arr)
     time_arr = np.array(time_arr)
 
-    print("\ntotal time used in OSQP: {} seconds".format(np.sum(time_arr)))
+    print("\ntotal time used in OSQP: {:.3} seconds".format(np.sum(time_arr)))
+    print("total time used in program: {:.3} seconds".format(time.time() - start_time))
 
     fontsize = 15
     plt.subplot(2, 1, 1)
