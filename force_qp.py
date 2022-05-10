@@ -131,8 +131,9 @@ def solve_force_qp(X_prev, h_des):
     for t in np.arange(N + 1):
         if np.sin(t / 3) > 0:
             c1[t] = False
-        else:
             c2[t] = False
+        else:
+            pass
     # number of foot in air constraints to add
     C = np.sum(np.logical_not(c1)) + np.sum(np.logical_not(c2))
 
@@ -245,10 +246,8 @@ def solve_force_qp(X_prev, h_des):
         q[row_indices[0] : row_indices[1]] = q_t
 
     qp = osqp.OSQP()
-    settings = {}
-    settings["verbose"] = False
 
-    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
+    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **osqp_settings)
     results = qp.solve()
 
     X_sol_fqp = results.x.reshape((dim_x_fqp, N + 1), order="F")

@@ -167,10 +167,8 @@ def solve_contact_qp(X_prev):
         q[row_indices[0] : row_indices[1]] = q_t
 
     qp = osqp.OSQP()
-    settings = {}
-    settings["verbose"] = False
 
-    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **settings)
+    qp.setup(P=P.tocsc(), q=q, A=A.tocsc(), l=l, u=u, **osqp_settings)
     results = qp.solve()
 
     X_sol_cqp = results.x.reshape((dim_x_cqp, N + 1), order="F")
