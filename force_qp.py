@@ -65,6 +65,18 @@ def calc_u_kin_t(p1tx, p1ty, p2tx, p2ty):
     return u_kin_t
 
 
+def calc_A_air1_t():
+    A_air_t = sp.lil_matrix((1, dim_x_fqp))
+    A_air_t[0, 7] = 1
+    return A_air_t
+
+
+def calc_A_air2_t():
+    A_air_t = sp.lil_matrix((1, dim_x_fqp))
+    A_air_t[0, 9] = 1
+    return A_air_t
+
+
 def calc_P():
     P = sp.lil_matrix(((N + 1) * dim_x_fqp, (N + 1) * dim_x_fqp))
     diag_P = np.array(
@@ -112,10 +124,22 @@ def solve_force_qp(X_prev, h_des):
     l2_cqp = p2_cqp - r_cqp
     h_prev = X_prev[0:6, :]
 
+    # determine foot contact state
+    # TODO: for time being, just hard code it
+    c1 = np.full(N + 1, True)
+    c2 = np.full(N + 1, True)
+    for t in np.arange(N + 1):
+        if np.sin(t / 3) > 0:
+            c1[t] = False
+        else:
+            c2[t] = False
+    # number of foot in air constraints to add
+    C = np.sum(np.logical_not(c1)) + np.sum(np.logical_not(c2))
+
     # constraints
-    A = sp.lil_matrix((20 * N + 14, dim_x_fqp * (N + 1)))
-    l = np.empty(20 * N + 14)
-    u = np.empty(20 * N + 14)
+    A = sp.lil_matrix((20 * N + 14 + C, dim_x_fqp * (N + 1)))
+    l = np.empty(20 * N + 14 + C)
+    u = np.empty(20 * N + 14 + C)
 
     # dynamics constraints
     for idx in np.arange(N):
@@ -166,6 +190,47 @@ def solve_force_qp(X_prev, h_des):
         A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_kin_t
         l[row_indices[0] : row_indices[1]] = l_kin_t
         u[row_indices[0] : row_indices[1]] = u_kin_t
+
+    # foot in air constraints
+    air_idx = 0
+    for t in np.arange(N + 1):
+        if c1[t] == False:
+            A_air1_t = calc_A_air1_t()
+            l_air1_t = 0
+            u_air1_t = 0
+
+            row_idx = (
+                N * dim_dyn_fqp
+                + (N + 1) * dim_fric_fqp
+                + (N + 1) * dim_kin_fqp
+                + air_idx
+            )
+            col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
+
+            A[row_idx, col_indices[0] : col_indices[1]] = A_air1_t
+            l[row_idx] = l_air1_t
+            u[row_idx] = u_air1_t
+
+            air_idx += 1
+
+        if c2[t] == False:
+            A_air2_t = calc_A_air2_t()
+            l_air2_t = 0
+            u_air2_t = 0
+
+            row_idx = (
+                N * dim_dyn_fqp
+                + (N + 1) * dim_fric_fqp
+                + (N + 1) * dim_kin_fqp
+                + air_idx
+            )
+            col_indices = (t * dim_x_fqp, (t + 1) * dim_x_fqp)
+
+            A[row_idx, col_indices[0] : col_indices[1]] = A_air2_t
+            l[row_idx] = l_air2_t
+            u[row_idx] = u_air2_t
+
+            air_idx += 1
 
     # objective
     P = calc_P()
@@ -225,7 +290,7 @@ if __name__ == "__main__":
         h_des[4, t] = th
         h_des[5, t] = k
 
-    X_sol = solve_force_qp(X, h_des)
+    X_sol, _ = solve_force_qp(X, h_des)
 
     animate(X)
     animate(X_sol)
