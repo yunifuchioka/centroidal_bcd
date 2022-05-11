@@ -28,15 +28,34 @@ def calc_l_dyn_t(kt, kt_prev):
     return l_dyn_t
 
 
-def calc_A_loc_t():
-    A_loc_t = sp.lil_matrix((dim_loc_cqp, dim_x_cqp))
-    A_loc_t[:, 4:] = sp.identity(4)
-    return A_loc_t
+def calc_A_loc1_contact_t():
+    A_loc1_contact_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
+    A_loc1_contact_t[0, 4] = 1
+    A_loc1_contact_t[0, 12] = -1
+    A_loc1_contact_t[1, 13] = 1
+    return A_loc1_contact_t
 
 
-def calc_l_loc_t(p1tx_prev, p1ty_prev, p2tx_prev, p2ty_prev):
-    l_loc_t = np.array([p1tx_prev, p1ty_prev, p2tx_prev, p2ty_prev])
-    return l_loc_t
+def calc_A_loc2_contact_t():
+    A_loc2_contact_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
+    A_loc2_contact_t[0, 6] = 1
+    A_loc2_contact_t[0, 14] = -1
+    A_loc2_contact_t[1, 15] = 1
+    return A_loc2_contact_t
+
+
+def calc_A_loc1_air_t():
+    A_loc1_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp))
+    A_loc1_air_t[0, 4] = 1
+    A_loc1_air_t[1, 5] = 1
+    return A_loc1_air_t
+
+
+def calc_A_loc2_air_t():
+    A_loc2_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp))
+    A_loc2_air_t[0, 6] = 1
+    A_loc2_air_t[1, 7] = 1
+    return A_loc2_air_t
 
 
 def calc_A_kin_t():
@@ -95,6 +114,10 @@ def solve_contact_qp(X_prev):
     f1_fqp = X_prev[10:12, :]
     f2_fqp = X_prev[12:, :]
 
+    # determine foot contact state
+    c1 = p1_fqp[1, :] < eps_contact
+    c2 = p2_fqp[1, :] < eps_contact
+
     # constraints
     A = sp.lil_matrix((15 * N + 12, dim_x_cqp * (N + 1)))
     l = np.empty(15 * N + 12)
@@ -119,29 +142,65 @@ def solve_contact_qp(X_prev):
 
     # foot location constraints
     for t in np.arange(N + 1):
-        p1tx_prev = p1_fqp[0, t]
-        p1ty_prev = p1_fqp[1, t]
-        p2tx_prev = p2_fqp[0, t]
-        p2ty_prev = p2_fqp[1, t]
+        if t > 0 and c1[t] == True:
+            A_loc1_contact_t = calc_A_loc1_contact_t()
+            l_loc1_contact_t = np.zeros(2)
+            u_loc1_contact_t = l_loc1_contact_t
 
-        A_loc_t = calc_A_loc_t()
-        l_loc_t = calc_l_loc_t(
-            p1tx_prev,
-            p1ty_prev,
-            p2tx_prev,
-            p2ty_prev,
-        )
-        u_loc_t = l_loc_t
+            row_indices = (
+                N * dim_dyn_cqp + t * dim_loc_cqp,
+                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
+            )
+            col_indices = ((t - 1) * dim_x_cqp, (t + 1) * dim_x_cqp)
+            A[
+                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
+            ] = A_loc1_contact_t
+            l[row_indices[0] : row_indices[1]] = l_loc1_contact_t
+            u[row_indices[0] : row_indices[1]] = u_loc1_contact_t
+        else:
+            A_loc1_air_t = calc_A_loc1_air_t()
+            l_loc1_air_t = p1_fqp[:, t]
+            u_loc1_air_t = l_loc1_air_t
+            row_indices = (
+                N * dim_dyn_cqp + t * dim_loc_cqp,
+                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
+            )
+            col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
+            A[
+                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
+            ] = A_loc1_air_t
+            l[row_indices[0] : row_indices[1]] = l_loc1_air_t
+            u[row_indices[0] : row_indices[1]] = u_loc1_air_t
 
-        row_indices = (
-            N * dim_dyn_cqp + t * dim_loc_cqp,
-            N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
-        )
-        col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
+        if t > 0 and c2[t] == True:
+            A_loc2_contact_t = calc_A_loc2_contact_t()
+            l_loc2_contact_t = np.zeros(2)
+            u_loc2_contact_t = l_loc2_contact_t
 
-        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc_t
-        l[row_indices[0] : row_indices[1]] = l_loc_t
-        u[row_indices[0] : row_indices[1]] = u_loc_t
+            row_indices = (
+                N * dim_dyn_cqp + t * dim_loc_cqp + 2,
+                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
+            )
+            col_indices = ((t - 1) * dim_x_cqp, (t + 1) * dim_x_cqp)
+            A[
+                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
+            ] = A_loc2_contact_t
+            l[row_indices[0] : row_indices[1]] = l_loc2_contact_t
+            u[row_indices[0] : row_indices[1]] = u_loc2_contact_t
+        else:
+            A_loc2_air_t = calc_A_loc2_air_t()
+            l_loc2_air_t = p2_fqp[:, t]
+            u_loc2_air_t = l_loc2_air_t
+            row_indices = (
+                N * dim_dyn_cqp + t * dim_loc_cqp + 2,
+                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
+            )
+            col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
+            A[
+                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
+            ] = A_loc2_air_t
+            l[row_indices[0] : row_indices[1]] = l_loc2_air_t
+            u[row_indices[0] : row_indices[1]] = u_loc2_air_t
 
     # kinematic constraints
     for t in np.arange(N + 1):
@@ -214,7 +273,7 @@ if __name__ == "__main__":
         X[10:12, t] = f1
         X[12:14, t] = f2
 
-    X_sol = solve_contact_qp(X)
+    X_sol, _ = solve_contact_qp(X)
 
     animate(X)
     animate(X_sol)
