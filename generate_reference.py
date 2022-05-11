@@ -9,7 +9,7 @@ def generate_reference(motion_type="default"):
     if motion_type == "random":
         num_points = N // 50
         t_des = np.linspace(0, N * dt, num_points)
-        rx_des = np.random.rand(num_points) * 0.14 - 0.07
+        rx_des = np.random.rand(num_points) * 0.3 - 0.15
         ry_des = np.random.rand(num_points) * 0.14 + 0.07
         r_des = np.vstack((rx_des, ry_des))
         th_des = np.random.rand(num_points) * np.pi / 4.0 - np.pi / 8.0
@@ -35,8 +35,8 @@ def generate_reference(motion_type="default"):
             l = np.array([0.0, 0.0])
             th = th_interp_func(t * dt)
             k = 0.0
-            p1 = np.array([-0.15, 0.05 * max(np.sin(t / 5), 0.0)])
-            p2 = np.array([0.15, 0.05 * max(np.sin(t / 5), 0.0)])
+            p1 = np.array([r[0] - 0.15, 0.05 * max(np.sin(t / 5), 0.0)])
+            p2 = np.array([r[0] + 0.15, 0.05 * max(np.sin(t / 5), 0.0)])
             f1 = np.array([0, m * g / 2])
             f2 = np.array([0, m * g / 2])
 

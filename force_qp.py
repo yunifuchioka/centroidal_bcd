@@ -125,18 +125,6 @@ def solve_force_qp(X_prev, h_des):
     h_prev = X_prev[0:6, :]
 
     # determine foot contact state
-    # c1 = np.full(N + 1, True)
-    # c2 = np.full(N + 1, True)
-    # for t in np.arange(N + 1):
-    #     if p1_cqp[1, t] < eps_contact:
-    #         c1[t] = True
-    #     else:
-    #         c1[t] = False
-    #     if p2_cqp[1, t] < eps_contact:
-    #         c2[t] = True
-    #     else:
-    #         c2[t] = False
-    # import ipdb; ipdb.set_trace()
     c1 = p1_cqp[1,:] < eps_contact
     c2 = p2_cqp[1,:] < eps_contact
     # number of foot in air constraints to add
