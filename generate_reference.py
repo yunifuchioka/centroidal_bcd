@@ -35,8 +35,8 @@ def generate_reference(motion_type="default"):
             l = np.array([0.0, 0.0])
             th = th_interp_func(t * dt)
             k = 0.0
-            p1 = np.array([-0.15, 0])
-            p2 = np.array([0.15, 0])
+            p1 = np.array([-0.15, 0.05 * max(np.sin(t / 5), 0.0)])
+            p2 = np.array([0.15, 0.05 * max(np.sin(t / 5), 0.0)])
             f1 = np.array([0, m * g / 2])
             f2 = np.array([0, m * g / 2])
 
@@ -58,6 +58,6 @@ def generate_reference(motion_type="default"):
 
 
 if __name__ == "__main__":
-    X, _ = generate_reference(motion_type="random_linear")
+    X, _ = generate_reference(motion_type="random")
 
     animate(X)

@@ -34,8 +34,8 @@ def calc_A_loc_t():
     return A_loc_t
 
 
-def calc_l_loc_t(p1tx_prev, p2tx_prev):
-    l_loc_t = np.array([p1tx_prev, 0, p2tx_prev, 0])
+def calc_l_loc_t(p1tx_prev, p1ty_prev, p2tx_prev, p2ty_prev):
+    l_loc_t = np.array([p1tx_prev, p1ty_prev, p2tx_prev, p2ty_prev])
     return l_loc_t
 
 
@@ -120,10 +120,17 @@ def solve_contact_qp(X_prev):
     # foot location constraints
     for t in np.arange(N + 1):
         p1tx_prev = p1_fqp[0, t]
+        p1ty_prev = p1_fqp[1, t]
         p2tx_prev = p2_fqp[0, t]
+        p2ty_prev = p2_fqp[1, t]
 
         A_loc_t = calc_A_loc_t()
-        l_loc_t = calc_l_loc_t(p1tx_prev, p2tx_prev)
+        l_loc_t = calc_l_loc_t(
+            p1tx_prev,
+            p1ty_prev,
+            p2tx_prev,
+            p2ty_prev,
+        )
         u_loc_t = l_loc_t
 
         row_indices = (

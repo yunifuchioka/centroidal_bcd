@@ -21,6 +21,7 @@ L_th = phi_th
 L_k = phi_k
 L_p = 10.0
 psi = 0.1
+eps_contact = 1e-3
 
 dim_x = 14
 
