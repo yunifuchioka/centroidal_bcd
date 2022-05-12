@@ -77,10 +77,10 @@ def animate(X, fname=None, display=True, repeat=False):
         blit=False,
     )
 
-    # if fname is not None:
-    #     Writer = animation.writers["ffmpeg"]
-    #     writer = Writer(fps=int(1 / dt), metadata=dict(artist="Me"), bitrate=1000)
-    #     anim.save("videos/" + fname + ".mp4", writer=writer)
+    if fname is not None:
+        Writer = animation.writers["ffmpeg"]
+        writer = Writer(fps=int(1 / dt), metadata=dict(artist="Me"), bitrate=1000)
+        anim.save("videos/" + fname + ".mp4", writer=writer)
 
     if display:
         plt.show()

@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import argparse
+from distutils.util import strtobool
+from datetime import datetime
 
 from constants import *
 from draw import animate
@@ -19,6 +22,26 @@ def calc_consensus(X, X_prev):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-d",
+        "--display",
+        help="toggle whether to display animation window",
+        type=strtobool,
+        default=1,
+    )
+    parser.add_argument("-n", "--name", help="experiment name", type=str, default=None)
+    parser.add_argument(
+        "-s", "--save", help="toggle whether to save video", type=strtobool, default=0
+    )
+
+    # parse and post processing
+    args = parser.parse_args()
+    args.display = bool(args.display)
+    args.save = bool(args.save)
+    if args.name is None:
+        args.name = datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
+
     start_time = time.time()
     X, h_des = generate_reference(motion_type="random")
 
@@ -67,4 +90,9 @@ if __name__ == "__main__":
     plt.tick_params(axis="y", labelsize=fontsize)
     plt.show()
 
-    animate(X, repeat=True)
+    # optionally display/save solution animation
+    if args.save:
+        fname = args.name
+    else:
+        fname = None
+    animate(X, fname=fname, display=args.display)
