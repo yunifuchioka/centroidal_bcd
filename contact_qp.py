@@ -85,6 +85,22 @@ def calc_P():
         ]
     )
     P.setdiag(np.tile(diag_P, N + 1))
+    # foot velocity regularization
+    P[4:8, 4:8] += 1.0 / dt**2 * psi_pdot * sp.identity(4)
+    for idx in range(N):
+        P_pdot_t = sp.lil_matrix((dim_x_cqp * 2, dim_x_cqp * 2))
+
+        P_pdot_t[4:8, 12:16] = -1.0 / dt**2 * psi_pdot * sp.identity(4)
+        P_pdot_t[12:16, 4:8] = -1.0 / dt**2 * psi_pdot * sp.identity(4)
+        P_pdot_t[12:16, 12:16] = 1.0 / dt**2 * psi_pdot * sp.identity(4)
+
+        row_col_indices = (idx * dim_x_cqp, (idx + 2) * dim_x_cqp)
+
+        P[
+            row_col_indices[0] : row_col_indices[1],
+            row_col_indices[0] : row_col_indices[1],
+        ] += P_pdot_t
+
     return P
 
 
@@ -159,8 +175,10 @@ def solve_contact_qp(X_prev):
             u[row_indices[0] : row_indices[1]] = u_loc1_contact_t
         else:
             A_loc1_air_t = calc_A_loc1_air_t()
-            l_loc1_air_t = p1_fqp[:, t]
-            u_loc1_air_t = l_loc1_air_t
+            # l_loc1_air_t = p1_fqp[:, t]
+            # u_loc1_air_t = l_loc1_air_t
+            l_loc1_air_t = np.full(dim_loc_cqp // 2, -np.inf)
+            u_loc1_air_t = np.full(dim_loc_cqp // 2, np.inf)
             row_indices = (
                 N * dim_dyn_cqp + t * dim_loc_cqp,
                 N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
@@ -189,8 +207,10 @@ def solve_contact_qp(X_prev):
             u[row_indices[0] : row_indices[1]] = u_loc2_contact_t
         else:
             A_loc2_air_t = calc_A_loc2_air_t()
-            l_loc2_air_t = p2_fqp[:, t]
-            u_loc2_air_t = l_loc2_air_t
+            # l_loc2_air_t = p2_fqp[:, t]
+            # u_loc2_air_t = l_loc2_air_t
+            l_loc2_air_t = np.full(dim_loc_cqp // 2, -np.inf)
+            u_loc2_air_t = np.full(dim_loc_cqp // 2, np.inf)
             row_indices = (
                 N * dim_dyn_cqp + t * dim_loc_cqp + 2,
                 N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,

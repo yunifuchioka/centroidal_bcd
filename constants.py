@@ -1,4 +1,4 @@
-N = 1000
+N = 300
 dt = 0.01
 m = 1.4
 g = 9.81
@@ -21,6 +21,7 @@ L_th = phi_th
 L_k = phi_k
 L_p = 10.0
 psi = 0.1
+psi_pdot = 0.001
 eps_contact = 1e-3
 
 dim_x = 14
