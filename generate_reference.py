@@ -1,22 +1,40 @@
 import numpy as np
 from scipy.interpolate import interp1d
+from scipy.interpolate import CubicHermiteSpline
 
 from constants import *
 from draw import animate
 
 
+# linearly interpolate x and y, evaluate at t
+def linear_interp_t(x, y, t):
+    f = interp1d(x, y, "linear")
+    return f(t)
+
+
+# interpolate x and y, evaluate at t using cubic splines with zero deriatives
+# this creates an interpolation similar to linear interpolation, but with
+# smoothed corners
+def cubic_interp_t(x, y, t):
+    f = CubicHermiteSpline(x, y, np.zeros_like(x))
+    return f(t)
+
+
+# sinusoidal function evaluated at t defined using oscillation period, minimum
+# and maximum values
+def sinusoid(period, min_val, max_val, t, phase_offset=0):
+    return (max_val - min_val) / 2.0 * (
+        1 - np.cos(2 * np.pi / period * t + phase_offset)
+    ) + min_val
+
+
 def generate_reference(motion_type="default"):
     if motion_type == "random":
-        num_points = N // 50
-        t_des = np.linspace(0, N * dt, num_points)
-        rx_des = np.random.rand(num_points) * 0.3 - 0.15
-        ry_des = np.random.rand(num_points) * 0.14 + 0.07
-        r_des = np.vstack((rx_des, ry_des))
-        th_des = np.random.rand(num_points) * np.pi / 4.0 - np.pi / 8.0
-
-        interp_kind = "linear"
-        r_interp_func = interp1d(t_des, r_des, kind=interp_kind)
-        th_interp_func = interp1d(t_des, th_des, kind=interp_kind)
+        interp_points = N // 50
+        t_interp = np.linspace(0, N * dt, interp_points)
+        rx_interp = np.random.rand(interp_points) * 0.46 - 0.23
+        ry_interp = np.random.rand(interp_points) * 0.14 + 0.07
+        th_interp = np.random.rand(interp_points) * np.pi / 4.0 - np.pi / 8.0
 
     X = np.empty((dim_x, N + 1))
     h_des = np.empty((6, N + 1))
@@ -31,12 +49,17 @@ def generate_reference(motion_type="default"):
             f1 = np.array([0, m * g / 2])
             f2 = np.array([0, m * g / 2])
         if motion_type == "random":
-            r = r_interp_func(t * dt)
+            r = np.array(
+                [
+                    linear_interp_t(t_interp, rx_interp, t * dt),
+                    linear_interp_t(t_interp, ry_interp, t * dt),
+                ]
+            )
             l = np.array([0.0, 0.0])
-            th = th_interp_func(t * dt)
+            th = linear_interp_t(t_interp, th_interp, t * dt)
             k = 0.0
-            p1 = np.array([r[0] - 0.15, 0.05 * max(np.sin(t / 5), 0.0)])
-            p2 = np.array([r[0] + 0.15, 0.05 * max(np.sin(t / 5), 0.0)])
+            p1 = np.array([r[0] - 0.15, max(sinusoid(0.3, -0.07, 0.07, t * dt), 0.0)])
+            p2 = np.array([r[0] + 0.15, max(sinusoid(0.3, -0.07, 0.07, t * dt), 0.0)])
             f1 = np.array([0, m * g / 2])
             f2 = np.array([0, m * g / 2])
 
