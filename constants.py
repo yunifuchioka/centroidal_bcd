@@ -19,7 +19,8 @@ L_r = phi_r / 10.0
 L_l = phi_l
 L_th = phi_th
 L_k = phi_k
-L_p = 10.0
+L_p = 100.0
+foot_air_tol = 0.1
 psi = 0.1
 eps_contact = 1e-3
 

@@ -159,8 +159,8 @@ def solve_contact_qp(X_prev):
             u[row_indices[0] : row_indices[1]] = u_loc1_contact_t
         else:
             A_loc1_air_t = calc_A_loc1_air_t()
-            l_loc1_air_t = p1_fqp[:, t]
-            u_loc1_air_t = l_loc1_air_t
+            l_loc1_air_t = p1_fqp[:, t] - foot_air_tol
+            u_loc1_air_t = p1_fqp[:, t] + foot_air_tol
             row_indices = (
                 N * dim_dyn_cqp + t * dim_loc_cqp,
                 N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
@@ -189,8 +189,8 @@ def solve_contact_qp(X_prev):
             u[row_indices[0] : row_indices[1]] = u_loc2_contact_t
         else:
             A_loc2_air_t = calc_A_loc2_air_t()
-            l_loc2_air_t = p2_fqp[:, t]
-            u_loc2_air_t = l_loc2_air_t
+            l_loc2_air_t = p2_fqp[:, t] - foot_air_tol
+            u_loc2_air_t = p2_fqp[:, t] + foot_air_tol
             row_indices = (
                 N * dim_dyn_cqp + t * dim_loc_cqp + 2,
                 N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,

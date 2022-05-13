@@ -32,9 +32,9 @@ def generate_reference(motion_type="default"):
     if motion_type == "random":
         interp_points = N // 50
         t_interp = np.linspace(0, N * dt, interp_points)
-        rx_interp = np.random.rand(interp_points) * 0.46 - 0.23
-        ry_interp = np.random.rand(interp_points) * 0.14 + 0.07
-        th_interp = np.random.rand(interp_points) * np.pi / 4.0 - np.pi / 8.0
+        rx_interp = np.random.rand(interp_points) * 0.5 - 0.25
+        # ry_interp = np.random.rand(interp_points) * 0.14 + 0.07
+        # th_interp = np.random.rand(interp_points) * np.pi / 4.0 - np.pi / 8.0
 
     X = np.empty((dim_x, N + 1))
     h_des = np.empty((6, N + 1))
@@ -52,14 +52,14 @@ def generate_reference(motion_type="default"):
             r = np.array(
                 [
                     linear_interp_t(t_interp, rx_interp, t * dt),
-                    linear_interp_t(t_interp, ry_interp, t * dt),
+                    sinusoid(0.5, 0.05, 0.3, t * dt),
                 ]
             )
             l = np.array([0.0, 0.0])
-            th = linear_interp_t(t_interp, th_interp, t * dt)
+            th = 0.0
             k = 0.0
-            p1 = np.array([r[0] - 0.15, max(sinusoid(0.3, -0.07, 0.07, t * dt), 0.0)])
-            p2 = np.array([r[0] + 0.15, max(sinusoid(0.3, -0.07, 0.07, t * dt), 0.0)])
+            p1 = np.array([r[0] - 0.19, max(sinusoid(0.5, -0.1, 0.1, t * dt), 0.0)])
+            p2 = np.array([r[0] + 0.19, max(sinusoid(0.5, -0.1, 0.1, t * dt), 0.0)])
             f1 = np.array([0, m * g / 2])
             f2 = np.array([0, m * g / 2])
 
