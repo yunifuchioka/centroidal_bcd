@@ -30,31 +30,31 @@ def calc_l_dyn_t(kt, kt_prev):
 
 def calc_A_loc1_contact_t():
     A_loc1_contact_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
-    A_loc1_contact_t[0, 4] = 1
-    A_loc1_contact_t[0, 12] = -1
+    A_loc1_contact_t[0, 4] = -1
+    A_loc1_contact_t[0, 12] = 1
     A_loc1_contact_t[1, 13] = 1
     return A_loc1_contact_t
 
 
 def calc_A_loc2_contact_t():
     A_loc2_contact_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
-    A_loc2_contact_t[0, 6] = 1
-    A_loc2_contact_t[0, 14] = -1
+    A_loc2_contact_t[0, 6] = -1
+    A_loc2_contact_t[0, 14] = 1
     A_loc2_contact_t[1, 15] = 1
     return A_loc2_contact_t
 
 
 def calc_A_loc1_air_t():
-    A_loc1_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp))
-    A_loc1_air_t[0, 4] = 1
-    A_loc1_air_t[1, 5] = 1
+    A_loc1_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
+    A_loc1_air_t[0, 12] = 1
+    A_loc1_air_t[1, 13] = 1
     return A_loc1_air_t
 
 
 def calc_A_loc2_air_t():
-    A_loc2_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp))
-    A_loc2_air_t[0, 6] = 1
-    A_loc2_air_t[1, 7] = 1
+    A_loc2_air_t = sp.lil_matrix((dim_loc_cqp // 2, dim_x_cqp * 2))
+    A_loc2_air_t[0, 14] = 1
+    A_loc2_air_t[1, 15] = 1
     return A_loc2_air_t
 
 
@@ -119,9 +119,9 @@ def solve_contact_qp(X_prev):
     c2 = p2_fqp[1, :] < eps_contact
 
     # constraints
-    A = sp.lil_matrix((15 * N + 12, dim_x_cqp * (N + 1)))
-    l = np.empty(15 * N + 12)
-    u = np.empty(15 * N + 12)
+    A = sp.lil_matrix((15 * N + 8, dim_x_cqp * (N + 1)))
+    l = np.empty(15 * N + 8)
+    u = np.empty(15 * N + 8)
 
     # dynamics constraints
     for idx in np.arange(N):
@@ -141,66 +141,43 @@ def solve_contact_qp(X_prev):
         u[row_indices[0] : row_indices[1]] = u_dyn_t
 
     # foot location constraints
-    for t in np.arange(N + 1):
-        if t > 0 and c1[t] == True:
-            A_loc1_contact_t = calc_A_loc1_contact_t()
-            l_loc1_contact_t = np.zeros(2)
-            u_loc1_contact_t = l_loc1_contact_t
-
-            row_indices = (
-                N * dim_dyn_cqp + t * dim_loc_cqp,
-                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
-            )
-            col_indices = ((t - 1) * dim_x_cqp, (t + 1) * dim_x_cqp)
-            A[
-                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
-            ] = A_loc1_contact_t
-            l[row_indices[0] : row_indices[1]] = l_loc1_contact_t
-            u[row_indices[0] : row_indices[1]] = u_loc1_contact_t
+    # TODO: some refactoring needed here...
+    for idx in np.arange(N):
+        if c1[idx + 1] == True:
+            A_loc1 = calc_A_loc1_contact_t()
+            l_loc1 = np.zeros(2)
+            u_loc1 = l_loc1
         else:
-            A_loc1_air_t = calc_A_loc1_air_t()
-            l_loc1_air_t = p1_fqp[:, t] - foot_air_tol
-            u_loc1_air_t = p1_fqp[:, t] + foot_air_tol
-            row_indices = (
-                N * dim_dyn_cqp + t * dim_loc_cqp,
-                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp - 2,
-            )
-            col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
-            A[
-                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
-            ] = A_loc1_air_t
-            l[row_indices[0] : row_indices[1]] = l_loc1_air_t
-            u[row_indices[0] : row_indices[1]] = u_loc1_air_t
+            A_loc1 = calc_A_loc1_air_t()
+            l_loc1 = p1_fqp[:, idx] - foot_air_tol
+            u_loc1 = p1_fqp[:, idx] + foot_air_tol
 
-        if t > 0 and c2[t] == True:
-            A_loc2_contact_t = calc_A_loc2_contact_t()
-            l_loc2_contact_t = np.zeros(2)
-            u_loc2_contact_t = l_loc2_contact_t
+        row_indices = (
+            N * dim_dyn_cqp + idx * dim_loc_cqp,
+            N * dim_dyn_cqp + (idx + 1) * dim_loc_cqp - 2,
+        )
+        col_indices = (idx * dim_x_cqp, (idx + 2) * dim_x_cqp)
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc1
+        l[row_indices[0] : row_indices[1]] = l_loc1
+        u[row_indices[0] : row_indices[1]] = u_loc1
 
-            row_indices = (
-                N * dim_dyn_cqp + t * dim_loc_cqp + 2,
-                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
-            )
-            col_indices = ((t - 1) * dim_x_cqp, (t + 1) * dim_x_cqp)
-            A[
-                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
-            ] = A_loc2_contact_t
-            l[row_indices[0] : row_indices[1]] = l_loc2_contact_t
-            u[row_indices[0] : row_indices[1]] = u_loc2_contact_t
+        if c2[idx + 1] == True:
+            A_loc2 = calc_A_loc2_contact_t()
+            l_loc2 = np.zeros(2)
+            u_loc2 = l_loc2
         else:
-            A_loc2_air_t = calc_A_loc2_air_t()
-            l_loc2_air_t = p2_fqp[:, t] - foot_air_tol
-            u_loc2_air_t = p2_fqp[:, t] + foot_air_tol
-            row_indices = (
-                N * dim_dyn_cqp + t * dim_loc_cqp + 2,
-                N * dim_dyn_cqp + (t + 1) * dim_loc_cqp,
-            )
-            col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
-            A[
-                row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]
-            ] = A_loc2_air_t
-            l[row_indices[0] : row_indices[1]] = l_loc2_air_t
-            u[row_indices[0] : row_indices[1]] = u_loc2_air_t
+            A_loc2 = calc_A_loc2_air_t()
+            l_loc2 = p2_fqp[:, idx + 1] - foot_air_tol
+            u_loc2 = p2_fqp[:, idx + 1] + foot_air_tol
+
+        row_indices = (
+            N * dim_dyn_cqp + idx * dim_loc_cqp + 2,
+            N * dim_dyn_cqp + (idx + 1) * dim_loc_cqp,
+        )
+        col_indices = (idx * dim_x_cqp, (idx + 2) * dim_x_cqp)
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc2
+        l[row_indices[0] : row_indices[1]] = l_loc2
+        u[row_indices[0] : row_indices[1]] = u_loc2
 
     # kinematic constraints
     for t in np.arange(N + 1):
@@ -209,8 +186,8 @@ def solve_contact_qp(X_prev):
         u_kin_t = np.full(dim_kin_cqp, Lmax)
 
         row_indices = (
-            N * dim_dyn_cqp + (N + 1) * dim_loc_cqp + t * dim_kin_cqp,
-            N * dim_dyn_cqp + (N + 1) * dim_loc_cqp + (t + 1) * dim_kin_cqp,
+            N * dim_dyn_cqp + N * dim_loc_cqp + t * dim_kin_cqp,
+            N * dim_dyn_cqp + N * dim_loc_cqp + (t + 1) * dim_kin_cqp,
         )
         col_indices = (t * dim_x_cqp, (t + 1) * dim_x_cqp)
 
