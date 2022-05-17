@@ -141,7 +141,6 @@ def solve_contact_qp(X_prev):
         u[row_indices[0] : row_indices[1]] = u_dyn_t
 
     # foot location constraints
-    # TODO: some refactoring needed here...
     for idx in np.arange(N):
         if c1[idx + 1] == True:
             A_loc1 = calc_A_loc1_contact_t()
@@ -152,15 +151,6 @@ def solve_contact_qp(X_prev):
             l_loc1 = p1_fqp[:, idx] - foot_air_tol
             u_loc1 = p1_fqp[:, idx] + foot_air_tol
 
-        row_indices = (
-            N * dim_dyn_cqp + idx * dim_loc_cqp,
-            N * dim_dyn_cqp + (idx + 1) * dim_loc_cqp - 2,
-        )
-        col_indices = (idx * dim_x_cqp, (idx + 2) * dim_x_cqp)
-        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc1
-        l[row_indices[0] : row_indices[1]] = l_loc1
-        u[row_indices[0] : row_indices[1]] = u_loc1
-
         if c2[idx + 1] == True:
             A_loc2 = calc_A_loc2_contact_t()
             l_loc2 = np.zeros(2)
@@ -170,14 +160,18 @@ def solve_contact_qp(X_prev):
             l_loc2 = p2_fqp[:, idx + 1] - foot_air_tol
             u_loc2 = p2_fqp[:, idx + 1] + foot_air_tol
 
+        A_loc = sp.vstack((A_loc1, A_loc2))
+        l_loc = np.hstack((l_loc1, l_loc2))
+        u_loc = np.hstack((u_loc1, u_loc2))
+
         row_indices = (
-            N * dim_dyn_cqp + idx * dim_loc_cqp + 2,
+            N * dim_dyn_cqp + idx * dim_loc_cqp,
             N * dim_dyn_cqp + (idx + 1) * dim_loc_cqp,
         )
         col_indices = (idx * dim_x_cqp, (idx + 2) * dim_x_cqp)
-        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc2
-        l[row_indices[0] : row_indices[1]] = l_loc2
-        u[row_indices[0] : row_indices[1]] = u_loc2
+        A[row_indices[0] : row_indices[1], col_indices[0] : col_indices[1]] = A_loc
+        l[row_indices[0] : row_indices[1]] = l_loc
+        u[row_indices[0] : row_indices[1]] = u_loc
 
     # kinematic constraints
     for t in np.arange(N + 1):
